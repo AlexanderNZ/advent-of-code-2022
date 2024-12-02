@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 
 class TrendReport:
     def __init__(self, report, is_trend, has_diff_within_range, status):
@@ -61,11 +60,7 @@ with open('input.txt') as file:
 
 trend_reports = detect_trend_reports(reports)
 
-# Convert the trend reports to a list of dictionaries
-trend_reports_dict = [trend_report.to_dict() for trend_report in trend_reports]
-
 # Print the JSON output
-print(json.dumps({"reactor_reports": trend_reports_dict}, indent=4))
-
-total_trends_with_diff = sum(1 for trend_report in trend_reports if trend_report.is_trend and trend_report.has_diff_within_range)
-print(json.dumps({"total_trends_with_diff": total_trends_with_diff}, indent=4))
+safe_reports_count = sum(1 for trend_report in trend_reports if trend_report.is_trend and trend_report.has_diff_within_range)
+print(json.dumps({"reactor_reports": [trend_report.to_dict() for trend_report in trend_reports]}, indent=4))
+print(json.dumps({"total_trends_with_diff": safe_reports_count}, indent=4))
