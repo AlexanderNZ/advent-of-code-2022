@@ -3,12 +3,9 @@ import json
 
 
 def remove_corrupted_input(input_string):
-    # Use regex to remove all characters except numbers, m, u, l, parentheses, and commas
-    cleaned_string = re.sub(r'[^0-9mul\(\)\[\],]+', '', input_string)
-
-    # Perform a subsequent scan for valid sets of characters
-    valid_sets_pattern = re.compile(r'mul\(\d+,\d+\)')
-    valid_sets = valid_sets_pattern.findall(cleaned_string)
+    # Use regex to find all valid mul(X,Y) patterns where X and Y are 1-3 digit numbers
+    valid_sets_pattern = re.compile(r'mul\(\d{1,3},\d{1,3}\)')
+    valid_sets = valid_sets_pattern.findall(input_string)
     cleaned_string = ''.join(valid_sets)
 
     return cleaned_string
@@ -38,7 +35,6 @@ def split_mul_declarations(input_string):
             i += 1
     return mul_declarations
 
-
 def evaluate_mul_expression(expression):
     match = re.match(r'^mul\((\d+),(\d+)\)$', expression)
     if match:
@@ -46,9 +42,8 @@ def evaluate_mul_expression(expression):
     else:
         raise ValueError("Invalid mul expression")
 
-with open('small_input.txt') as file:
-    content = file.readlines()
-    content = ''.join(content)
+with open('input.txt') as file:
+    content = file.read()
     cleaned_content = remove_corrupted_input(content)
     mul_list = split_mul_declarations(cleaned_content)
     filtered_mul_list = remove_bad_mul_calls(mul_list)
