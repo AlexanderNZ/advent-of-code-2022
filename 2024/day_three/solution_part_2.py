@@ -1,18 +1,17 @@
 import re
 import json
 
-
 def remove_corrupted_input(input_string):
-    # Use regex to find all valid mul(X,Y) patterns where X and Y are 1-3 digit numbers
-    valid_sets_pattern = re.compile(r'mul\(\d{1,3},\d{1,3}\)')
+    # Use regex to find all valid mul(X,Y), do(), and don't() patterns
+    valid_sets_pattern = re.compile(r'mul\(\d{1,3},\d{1,3}\)|do\(\)|don\'t\(\)')
     valid_sets = valid_sets_pattern.findall(input_string)
     cleaned_string = ''.join(valid_sets)
 
     return cleaned_string
 
 def remove_bad_mul_calls(potential_unsafe_mul):
-    valid_mul_pattern = re.compile(r'^mul\(\d+,\d+\)$')
-    filtered_list = [item for item in potential_unsafe_mul if valid_mul_pattern.match(item)]
+    valid_pattern = re.compile(r'^mul\(\d{1,3},\d{1,3}\)$|^do\(\)$|^don\'t\(\)$')
+    filtered_list = [item for item in potential_unsafe_mul if valid_pattern.match(item)]
 
     return filtered_list
 
@@ -20,15 +19,26 @@ def split_mul_declarations(input_string):
     mul_declarations = []
     i = 0
     while i < len(input_string):
-        if input_string[i:i+4] == 'mul(' or input_string[i:i+4] == 'mul[' or input_string[i:i+4] == 'mul{':
+        if input_string[i:i+4] == 'mul(' or input_string[i:i+3] == 'do(' or input_string[i:i+6] == "don't(":
             start = i
-            i += 4
-            counter = 1
-            while i < len(input_string) and counter > 0:
-                if input_string[i] in '([{':
-                    counter += 1
-                elif input_string[i] in ')]}':
-                    counter -= 1
+            if input_string[i:i+4] == 'mul(':
+                i += 4
+                counter = 1
+                while i < len(input_string) and counter > 0:
+                    if input_string[i] in '([{':
+                        counter += 1
+                    elif input_string[i] in ')]}':
+                        counter -= 1
+                    i += 1
+            elif input_string[i:i+3] == 'do(':
+                i += 3
+                while i < len(input_string) and input_string[i] != ')':
+                    i += 1
+                i += 1
+            elif input_string[i:i+6] == "don't(":
+                i += 6
+                while i < len(input_string) and input_string[i] != ')':
+                    i += 1
                 i += 1
             mul_declarations.append(input_string[start:i])
         else:
@@ -51,10 +61,16 @@ with open('input.txt') as file:
 print(json.dumps({"Actual": filtered_mul_list}, indent=4))
 
 total_result = 0
+enabled = True
 
-for mul_expression in filtered_mul_list:
-    result = evaluate_mul_expression(mul_expression)
-    total_result += result
+for command in filtered_mul_list:
+    if command == "don't()":
+        enabled = False
+    elif command == "do()":
+        enabled = True
+    elif enabled:
+        result = evaluate_mul_expression(command)
+        total_result += result
 
 # Print the accumulated result
 print(f"Result: {total_result}")
